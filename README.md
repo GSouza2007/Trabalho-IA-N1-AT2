@@ -44,7 +44,7 @@ Ajuste o slider para controlar a velocidade da animação (100ms a 1500ms).
 AT2-IA/
 ├── index.html            ← Página principal
 ├── css/
-│   └── style.css         ← Dark theme premium
+│   └── style.css         ← theme 
 ├── js/
 │   ├── graph.js          ← Grafo: estados, conexões, heurísticas
 │   ├── search.js         ← Algoritmo Greedy Best-First Search
