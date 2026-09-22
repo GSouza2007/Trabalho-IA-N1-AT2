@@ -63,8 +63,6 @@ Na busca gulosa, o próximo estado é escolhido pelo menor valor de $h(n)$ entre
 │   ├── search.js           # Implementação da busca gulosa
 │   ├── visualization.js    # Renderização e animação com Cytoscape.js
 │   └── app.js              # Controles, logs e resultados
-├── docs/
-│   └── relatorio.md        # Relatório técnico da atividade
 └── README.md
 ```
 
@@ -97,9 +95,8 @@ Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital
 - [Lucide](https://lucide.dev/) para os ícones;
 - Google Fonts para a tipografia da interface.
 
-## Documentação e repositório
+## Repositório
 
-- [Relatório técnico](docs/relatorio.md)
 - [Repositório no GitHub](https://github.com/GSouza2007/Trabalho-IA-N1-AT2)
 
 ## Contexto acadêmico
