@@ -1,84 +1,107 @@
-# 🚑 Busca Heurística — Rota de Emergência Urbana
+# Rota de Emergência Urbana
 
-**AT2 — Inteligência Artificial**
+Projeto acadêmico de Inteligência Artificial que apresenta, de forma visual e interativa, o funcionamento da **Greedy Best-First Search**. A aplicação simula o deslocamento de uma equipe de emergência entre uma Base de Atendimento e um Hospital Central em uma cidade fictícia.
 
-Aplicação web interativa que implementa uma Busca Heurística para encontrar a rota entre uma **Base de Atendimento** e um **Hospital Central** através de uma rede de vias urbanas fictícia.
+O foco do projeto é tornar observável uma decisão que normalmente fica escondida no código: em cada etapa, qual estado parece mais promissor de acordo com a função heurística $h(n)$?
 
-## 🎯 Objetivo
+## Visão geral
 
-Demonstrar o funcionamento da Busca Heurística com visualização animada passo a passo, mostrando como a função heurística h(n) influencia as decisões do algoritmo durante a exploração do grafo.
+A aplicação oferece:
 
-## 🚀 Como Executar
+- mapa interativo do grafo urbano;
+- execução automática com animação;
+- execução passo a passo;
+- log dos estados expandidos, abertos e visitados;
+- tabela com os valores das duas heurísticas;
+- comparação entre a heurística original e uma versão propositalmente distorcida;
+- reconstrução e destaque do caminho encontrado.
 
-### Opção 1: Abrir diretamente no navegador
-Basta abrir o arquivo `index.html` em qualquer navegador moderno (Chrome, Firefox, Edge).
+O cenário possui 12 estados, 16 conexões direcionadas, mais de um caminho possível até o destino, um estado sem saída e um caminho enganoso. Assim, é possível observar tanto uma execução eficiente quanto o efeito de uma estimativa ruim.
 
-### Opção 2: Servidor local (recomendado)
+## Executar localmente
+
+O projeto é estático e não exige instalação de dependências locais. As bibliotecas Cytoscape.js e Lucide são carregadas por CDN, portanto o navegador precisa de acesso à internet durante a execução.
+
+### Abertura direta
+
+Abra `index.html` em um navegador moderno, como Edge, Chrome ou Firefox.
+
+### Servidor local
+
+Um servidor local evita restrições de segurança do navegador e é a forma recomendada para desenvolvimento:
+
 ```bash
-# Com npx (Node.js)
+# Node.js
 npx http-server . -p 8080
 
-# Ou com Python
+# Python
 python -m http.server 8080
 ```
-Acesse `http://localhost:8080` no navegador.
 
-## 🎮 Como Usar
+Depois, acesse `http://localhost:8080`.
 
-1. **Executar Automático** — Roda a busca completa com animação
-2. **Passo a Passo** — Avança um passo por clique
-3. **Reset** — Reinicia a busca
-4. **Comparar Heurísticas** — Executa com heurística original e modificada, exibindo análise comparativa
+## Usar a aplicação
 
-### Trocar Heurística
-Use o seletor no painel de controle para alternar entre:
-- **📐 Original** — Valores baseados em distância estimada
-- **⚠️ Modificada** — Valores alterados propositalmente
+1. Escolha `Original` ou `Modificada` no seletor de heurística.
+2. Ajuste a velocidade da animação, se necessário.
+3. Use `Executar Automático` para acompanhar a busca completa.
+4. Use `Passo a Passo` para analisar uma decisão por vez.
+5. Use `Reset` para limpar a execução atual.
+6. Use `Comparar Heurísticas` para executar os dois experimentos e visualizar as diferenças.
 
-### Velocidade
-Ajuste o slider para controlar a velocidade da animação (100ms a 1500ms).
+Na busca gulosa, o próximo estado é escolhido pelo menor valor de $h(n)$ entre os estados disponíveis. Empates são resolvidos pela ordem alfabética do nome do estado. Como o algoritmo é guloso, ele não garante o caminho de menor custo em todos os grafos; a qualidade da heurística influencia diretamente o resultado.
 
-## 📂 Estrutura do Projeto
+## Organização do código
 
-```
-AT2-IA/
-├── index.html            ← Página principal
+```text
+.
+├── index.html              # Estrutura da interface
 ├── css/
-│   └── style.css         ← theme 
+│   └── style.css           # Layout, tema e estados visuais
 ├── js/
-│   ├── graph.js          ← Grafo: estados, conexões, heurísticas
-│   ├── search.js         ← Algoritmo Greedy Best-First Search
-│   ├── visualization.js  ← Renderização Cytoscape.js
-│   └── app.js            ← Orquestrador e interface
+│   ├── graph.js            # Estados, arestas, posições e heurísticas
+│   ├── search.js           # Implementação da busca gulosa
+│   ├── visualization.js    # Renderização e animação com Cytoscape.js
+│   └── app.js              # Controles, logs e resultados
 ├── docs/
-│   └── relatorio.md      ← Relatório completo do projeto
-└── README.md             ← Este arquivo
+│   └── relatorio.md        # Relatório técnico da atividade
+└── README.md
 ```
 
-## 🧠 Algoritmo
+## Dados do experimento
 
-**Greedy Best-First Search** com:
-- Seleção por **menor h(n)** entre todos os estados disponíveis
-- **Desempate por ordem alfabética**
-- Controle de estados visitados para evitar ciclos
-- Registro de predecessores para reconstrução do caminho
+**Origem:** Base<br>
+**Destino:** Hospital<br>
+**Algoritmo:** Greedy Best-First Search<br>
+**Critério de seleção:** menor $h(n)$<br>
+**Desempate:** ordem alfabética
+**Grafo:** 12 estados e 16 arestas direcionadas
 
-## 🗺️ Grafo
+Na configuração original, a rota encontrada é:
 
-- **12 estados** com nomes urbanos (Base, Centro, Rodoviária, Parque, Shopping, Universidade, Terminal, Ponte, Aeroporto, Hospital, Estádio, Praça)
-- **16 conexões** direcionadas
-- **3+ caminhos** distintos entre origem e destino
-- **1 beco sem saída** (Aeroporto)
-- **1 caminho enganoso** (Centro → Shopping → Terminal)
+```text
+Base → Parque → Universidade → Ponte → Hospital
+```
 
-## 🛠️ Tecnologias
+Na configuração modificada, a busca é atraída pelo caminho mais longo:
 
-- **HTML5** — Estrutura semântica
-- **CSS3** — Dark theme com glassmorphism e animações
-- **JavaScript** — Lógica do algoritmo e interface
-- **Cytoscape.js** — Visualização interativa do grafo
-- **Google Fonts** — Tipografia Inter
+```text
+Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital
+```
 
-## 📝 Licença
+## Tecnologias
 
-Projeto acadêmico — AT2 Inteligência Artificial.
+- HTML5 e CSS3;
+- JavaScript ES6+;
+- [Cytoscape.js](https://js.cytoscape.org/) para o grafo;
+- [Lucide](https://lucide.dev/) para os ícones;
+- Google Fonts para a tipografia da interface.
+
+## Documentação e repositório
+
+- [Relatório técnico](docs/relatorio.md)
+- [Repositório no GitHub](https://github.com/GSouza2007/Trabalho-IA-N1-AT2)
+
+## Contexto acadêmico
+
+Atividade AT2 da disciplina de Inteligência Artificial. O código tem finalidade didática e foi estruturado para permitir a inspeção visual do comportamento da busca, não para representar uma malha viária real.

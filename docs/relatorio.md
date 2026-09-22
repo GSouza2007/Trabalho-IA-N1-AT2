@@ -1,327 +1,265 @@
-# Relatório do Projeto — Busca Heurística: Rota de Emergência Urbana
+# Relatório Técnico: Busca Heurística em uma Rota de Emergência
 
-**Disciplina:** Inteligência Artificial — AT2  
-**Objetivo:** Implementar uma Busca Heurística para encontrar uma rota entre a Base de Atendimento e o Hospital Central em uma cidade fictícia.
+**Disciplina:** Inteligência Artificial<br>
+**Atividade:** AT2<br>
+**Projeto:** Rota de Emergência Urbana<br>
+**Repositório:** [GSouza2007/Trabalho-IA-N1-AT2](https://github.com/GSouza2007/Trabalho-IA-N1-AT2)
 
----
+## Resumo
 
-## 1. Descrição do Problema
+Este trabalho apresenta uma aplicação web para demonstrar a influência de uma função heurística em um problema de busca em grafos. O cenário representa uma equipe de emergência que precisa sair da **Base** e alcançar o **Hospital** em uma cidade fictícia. A solução utiliza a **Greedy Best-First Search**, ou Busca Gulosa por Melhor Primeiro, e exibe o processo em um grafo animado.
 
-Uma equipe de emergência precisa se deslocar de uma **Base de Atendimento** até um **Hospital Central** utilizando uma rede de vias urbanas. Cada ponto importante da cidade é representado por um **estado** e cada via entre dois pontos é representada por uma **conexão** no grafo.
+Foram executados dois experimentos: um com a heurística original, construída como uma estimativa de distância ao destino, e outro com valores modificados para atrair a busca para um caminho menos eficiente. O primeiro experimento encontrou uma rota com 5 estados visitados e 4 expansões; o segundo visitou 7 estados e realizou 6 expansões. O resultado evidencia que a busca gulosa é sensível à qualidade da estimativa usada para ordenar os candidatos.
 
-O algoritmo utiliza uma **função heurística h(n)** para orientar a escolha do próximo estado a ser explorado, buscando sempre o estado que parece mais próximo do objetivo.
+**Palavras-chave:** busca heurística, Greedy Best-First Search, grafos, função heurística, visualização interativa.
 
----
+## 1. Introdução
 
-## 2. Representação do Grafo
+Algoritmos de busca são usados para encontrar soluções em espaços formados por estados e transições. Em um grafo de rotas, os estados podem representar locais e as arestas podem representar deslocamentos possíveis. Quando existem muitos caminhos, uma heurística ajuda a priorizar os estados que parecem mais próximos do objetivo.
 
-### 2.1 Estados (Nós)
+O projeto transforma esse conceito em uma experiência visual. A interface permite observar a lista de estados disponíveis, a ordem em que os nós são visitados, os vizinhos adicionados ao conjunto de candidatos e o caminho reconstruído ao final. Dessa forma, o usuário pode relacionar a definição matemática do algoritmo com o seu comportamento concreto.
 
-O grafo possui **12 estados**, todos com nomes relacionados ao contexto urbano:
+## 2. Objetivos
 
-| # | Estado | Descrição |
-|---|--------|-----------|
-| 1 | **Base** | Origem — Base de Atendimento da equipe de emergência |
-| 2 | **Centro** | Zona central da cidade |
-| 3 | **Rodoviária** | Terminal rodoviário, região norte |
-| 4 | **Parque** | Parque municipal, zona central-sul |
-| 5 | **Aeroporto** | **Beco sem saída** — sem conexões de saída |
-| 6 | **Shopping** | Centro comercial, zona leste |
-| 7 | **Terminal** | Terminal de transporte, zona leste |
-| 8 | **Universidade** | Campus universitário |
-| 9 | **Estádio** | Estádio esportivo, zona sul-oeste |
-| 10 | **Praça** | Praça central, próxima à Ponte |
-| 11 | **Ponte** | Ponte sobre o rio, vizinha do Hospital |
-| 12 | **Hospital** | **Destino** — Hospital Central |
+### 2.1 Objetivo geral
 
-### 2.2 Conexões (Arestas)
+Implementar e visualizar uma busca heurística capaz de encontrar uma rota entre dois pontos de um grafo urbano direcionado.
 
-O grafo possui **16 conexões direcionadas**:
+### 2.2 Objetivos específicos
 
-| Origem | Destino |
-|--------|---------|
-| Base | Centro |
-| Base | Rodoviária |
-| Base | Parque |
-| Centro | Aeroporto |
-| Centro | Shopping |
+- modelar uma cidade fictícia como um grafo direcionado;
+- utilizar uma função $h(n)$ para priorizar estados;
+- implementar execução automática e passo a passo;
+- registrar estados abertos, visitados e expandidos;
+- reconstruir o caminho por meio de predecessores;
+- comparar uma heurística coerente com uma heurística deliberadamente distorcida;
+- discutir o impacto da heurística na eficiência e na qualidade da rota.
+
+## 3. Modelagem do problema
+
+O grafo é representado por uma lista de adjacência. Cada chave corresponde a um estado e seu valor lista os estados alcançáveis diretamente. As conexões são direcionadas: uma ligação de A para B não implica necessariamente uma ligação de B para A.
+
+### 3.1 Estados
+
+| Estado | Papel no cenário |
+|---|---|
+| Base | ponto de partida da equipe |
+| Centro | região central da cidade |
+| Rodoviária | terminal rodoviário |
+| Parque | área municipal no eixo principal |
+| Aeroporto | estado sem saída |
+| Shopping | centro comercial da região leste |
+| Terminal | terminal de transporte |
+| Universidade | campus universitário |
+| Estádio | área esportiva |
+| Praça | ponto de ligação próximo à Ponte |
+| Ponte | acesso direto ao Hospital |
+| Hospital | objetivo da busca |
+
+O modelo possui 12 estados e atende ao requisito de um estado sem saída: o **Aeroporto**. O **Hospital** também não possui sucessores, mas é tratado como objetivo e não como beco sem saída.
+
+### 3.2 Arestas direcionadas
+
+| Origem | Destinos |
+|---|---|
+| Base | Centro, Rodoviária, Parque |
+| Centro | Aeroporto, Shopping |
 | Rodoviária | Parque |
-| Parque | Universidade |
-| Parque | Estádio |
+| Parque | Universidade, Estádio |
+| Aeroporto | nenhum |
 | Shopping | Terminal |
 | Terminal | Praça |
 | Universidade | Ponte |
 | Estádio | Praça |
 | Praça | Ponte |
 | Ponte | Hospital |
-| Aeroporto | *(sem saída)* |
-| Hospital | *(objetivo)* |
+| Hospital | nenhum |
 
-### 2.3 Requisitos Atendidos
+Essa lista totaliza 16 arestas e permite três rotas completas entre Base e Hospital:
 
-| Requisito | Status | Detalhes |
-|-----------|--------|----------|
-| Mínimo 10 estados | ✅ | 12 estados |
-| Mínimo 14 conexões | ✅ | 16 conexões |
-| ≥ 3 caminhos distintos | ✅ | Caminho 1: Base→Parque→Universidade→Ponte→Hospital; Caminho 2: Base→Parque→Estádio→Praça→Ponte→Hospital; Caminho 3: Base→Centro→Shopping→Terminal→Praça→Ponte→Hospital |
-| Estado sem saída | ✅ | Aeroporto (sem conexões de saída) |
-| Caminho enganoso | ✅ | Centro→Shopping→Terminal parece promissor (h=9), mas gera caminho mais longo |
-| h(n)=0 no objetivo | ✅ | Hospital = 0 |
-| Nomes urbanos | ✅ | Todos os nomes são contextualizados |
+1. Base → Parque → Universidade → Ponte → Hospital;
+2. Base → Parque → Estádio → Praça → Ponte → Hospital;
+3. Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital.
 
----
+## 4. Função heurística
 
-## 3. Definição da Heurística
+A função heurística estima o esforço restante até o objetivo. Neste projeto, cada valor representa uma distância aproximada em blocos urbanos. Os valores não são calculados em tempo de execução; eles estão definidos em `graph.js` para permitir um experimento controlado.
 
-### 3.1 Critério Escolhido
+### 4.1 Heurística original
 
-**Distância Euclidiana Estimada em Blocos Urbanos.**
+| Estado | $h(n)$ |
+|---|---:|
+| Base | 18 |
+| Rodoviária | 15 |
+| Aeroporto | 14 |
+| Centro | 13 |
+| Estádio | 12 |
+| Terminal | 11 |
+| Parque | 10 |
+| Shopping | 9 |
+| Universidade | 7 |
+| Praça | 6 |
+| Ponte | 4 |
+| Hospital | 0 |
 
-Cada valor h(n) representa a **distância em linha reta aproximada** entre o estado e o Hospital Central, medida em "blocos urbanos" na planta fictícia da cidade.
+O valor do Hospital é zero porque ele é o objetivo. Em termos conceituais, valores menores indicam estados mais promissores.
 
-### 3.2 Justificativa
+### 4.2 Heurística modificada
 
-A distância em linha reta é uma heurística clássica e admissível para problemas de busca em grafos geográficos. Estados mais próximos geograficamente do Hospital recebem valores menores, orientando a busca na direção correta.
+Para medir a influência da heurística, três valores são alterados:
 
-### 3.3 Tabela de Valores h(n)
+| Estado | Original | Modificada | Efeito esperado |
+|---|---:|---:|---|
+| Centro | 13 | 4 | torna o Centro artificialmente atrativo |
+| Shopping | 9 | 3 | favorece a continuação pelo caminho leste |
+| Parque | 10 | 16 | desprioriza o caminho mais curto |
 
-| Estado | h(n) | Justificativa |
-|--------|------|---------------|
-| Base | 18 | Ponto mais distante, na periferia norte da cidade |
-| Rodoviária | 15 | Região norte, consideravelmente distante do hospital |
-| Aeroporto | 14 | Beco sem saída, zona norte-leste distante |
-| Centro | 13 | Zona central, ainda relativamente longe |
-| Estádio | 12 | Zona sul-oeste, fora do eixo direto ao hospital |
-| Terminal | 11 | Zona leste, não está no caminho mais direto |
-| Parque | 10 | Zona central-sul, mais próximo do eixo principal |
-| Shopping | 9 | Zona leste, aparenta proximidade mas engana |
-| Universidade | 7 | Relativamente próximo da Ponte |
-| Praça | 6 | Próximo da Ponte, caminho alternativo |
-| Ponte | 4 | Vizinho direto do Hospital |
-| Hospital | 0 | **Objetivo** — distância zero |
+Essa versão não representa uma estimativa melhor. Ela funciona como um experimento de sensibilidade: ao distorcer a percepção de proximidade, a ordem de exploração muda.
 
-### 3.4 Como os valores foram obtidos
+## 5. Algoritmo
 
-Os valores foram calculados considerando as posições dos estados na planta da cidade fictícia (coordenadas x, y definidas no código). A distância em linha reta de cada estado ao Hospital foi estimada e arredondada para valores inteiros, representando "blocos urbanos".
+### 5.1 Estratégia
 
----
+A Greedy Best-First Search mantém uma lista de estados abertos. A cada passo, ordena essa lista pelo menor $h(n)$ e remove o primeiro elemento. O estado removido é marcado como visitado; se não for o objetivo, seus vizinhos ainda não conhecidos são adicionados à lista.
 
-## 4. Critério de Desempate
+O algoritmo implementado usa:
 
-**Ordem Alfabética.**
-
-Quando dois ou mais estados possuem o mesmo valor heurístico h(n), o estado escolhido é aquele que vem **primeiro na ordem alfabética** (comparação lexicográfica dos nomes).
-
-Implementação no código (`search.js`, método `sortAbertos`):
-```javascript
-sortAbertos() {
-  this.abertos.sort((a, b) => {
-    if (a.h !== b.h) return a.h - b.h;       // menor h(n) primeiro
-    return a.estado.localeCompare(b.estado);   // desempate alfabético
-  });
-}
-```
-
----
-
-## 5. Algoritmo Implementado
-
-### 5.1 Greedy Best-First Search
-
-O algoritmo implementado é a **Busca Gulosa por Melhor Primeiro** (Greedy Best-First Search), que seleciona sempre o estado com menor valor heurístico h(n) entre todos os estados disponíveis.
+- conjunto de visitados para evitar reprocessamento;
+- predecessores para reconstruir a rota;
+- lista aberta global, e não apenas os vizinhos do último estado;
+- desempate alfabético quando os valores heurísticos são iguais;
+- histórico detalhado para alimentar a visualização e o log.
 
 ### 5.2 Pseudocódigo
 
+```text
+abertos <- [inicio]
+visitados <- conjunto vazio
+predecessores <- mapa vazio
+
+enquanto abertos não estiver vazio:
+    ordenar abertos por h(n) crescente e nome alfabético
+    atual <- remover primeiro elemento
+    adicionar atual a visitados
+
+    se atual for o objetivo:
+        reconstruir caminho usando predecessores
+        retornar sucesso
+
+    para cada vizinho de atual:
+        se vizinho não estiver em visitados nem em abertos:
+            predecessores[vizinho] <- atual
+            adicionar vizinho a abertos
+
+retornar falha
 ```
-FUNÇÃO BuscaHeurística(início, objetivo):
-  abertos ← [início]
-  visitados ← {}
-  predecessores ← {}
 
-  ENQUANTO abertos NÃO está vazio:
-    Ordenar abertos por h(n) crescente (desempate: alfabético)
-    atual ← remover primeiro de abertos
-    Adicionar atual a visitados
-    
-    SE atual == objetivo:
-      Reconstruir caminho via predecessores
-      RETORNAR sucesso
-    
-    PARA CADA vizinho de atual:
-      SE vizinho NÃO está em visitados E NÃO está em abertos:
-        predecessores[vizinho] ← atual
-        Adicionar vizinho a abertos
-  
-  RETORNAR falha (sem caminho)
+### 5.3 Critério de desempate
+
+O método `sortAbertos` compara primeiro os valores heurísticos. Quando há empate, compara os nomes dos estados com `localeCompare`. Esse critério torna a execução determinística e facilita a conferência dos resultados.
+
+## 6. Implementação da aplicação
+
+A aplicação foi dividida em módulos com responsabilidades específicas:
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `index.html` | estrutura semântica e controles da página |
+| `css/style.css` | layout, cores, responsividade e estados visuais |
+| `js/graph.js` | estados, posições, arestas e heurísticas |
+| `js/search.js` | estado interno e operações da busca |
+| `js/visualization.js` | criação do grafo e animações |
+| `js/app.js` | eventos, execução, log e resultados |
+
+O Cytoscape.js desenha o grafo e permite aplicar classes visuais aos estados em execução. O usuário consegue diferenciar origem, objetivo, estados abertos, visitados, em expansão e pertencentes ao caminho final.
+
+## 7. Experimentos e resultados
+
+Os resultados abaixo correspondem à execução do algoritmo com origem `Base` e objetivo `Hospital`.
+
+### 7.1 Experimento A: heurística original
+
+| Etapa | Estado selecionado | Estados adicionados | Próxima escolha |
+|---:|---|---|---|
+| 1 | Base ($h=18$) | Centro (13), Rodoviária (15), Parque (10) | Parque |
+| 2 | Parque ($h=10$) | Universidade (7), Estádio (12) | Universidade |
+| 3 | Universidade ($h=7$) | Ponte (4) | Ponte |
+| 4 | Ponte ($h=4$) | Hospital (0) | Hospital |
+| 5 | Hospital ($h=0$) | nenhum | objetivo encontrado |
+
+**Caminho:** Base → Parque → Universidade → Ponte → Hospital<br>
+**Estados visitados:** 5<br>
+**Estados expandidos:** 4<br>
+**Arestas percorridas:** 4
+
+### 7.2 Experimento B: heurística modificada
+
+| Etapa | Estado selecionado | Estados adicionados | Próxima escolha |
+|---:|---|---|---|
+| 1 | Base ($h=18$) | Centro (4), Rodoviária (15), Parque (16) | Centro |
+| 2 | Centro ($h=4$) | Aeroporto (14), Shopping (3) | Shopping |
+| 3 | Shopping ($h=3$) | Terminal (11) | Terminal |
+| 4 | Terminal ($h=11$) | Praça (6) | Praça |
+| 5 | Praça ($h=6$) | Ponte (4) | Ponte |
+| 6 | Ponte ($h=4$) | Hospital (0) | Hospital |
+| 7 | Hospital ($h=0$) | nenhum | objetivo encontrado |
+
+**Caminho:** Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital<br>
+**Estados visitados:** 7<br>
+**Estados expandidos:** 6<br>
+**Arestas percorridas:** 6
+
+## 8. Comparação e discussão
+
+| Métrica | Original | Modificada | Variação |
+|---|---:|---:|---:|
+| Estados no caminho | 5 | 7 | +2 |
+| Arestas percorridas | 4 | 6 | +2 |
+| Estados visitados | 5 | 7 | +2 |
+| Estados expandidos | 4 | 6 | +2 |
+
+A heurística original prioriza Parque, Universidade e Ponte, que formam a rota mais curta neste grafo. Já a heurística modificada reduz artificialmente os valores de Centro e Shopping e aumenta o de Parque. Como consequência, a busca percorre a região leste antes de chegar à Ponte.
+
+O experimento confirma duas propriedades importantes:
+
+1. a busca gulosa escolhe o menor valor heurístico disponível, mesmo que essa escolha não leve ao caminho globalmente mais curto;
+2. uma heurística distorcida pode aumentar a quantidade de expansões e o tamanho da solução encontrada.
+
+É importante não confundir esse resultado com uma prova de que a primeira heurística é sempre ótima. A Greedy Best-First Search não acumula o custo do caminho percorrido. Em um grafo diferente, uma estimativa aparentemente boa também poderia levar a uma solução subótima.
+
+## 9. Avaliação dos requisitos
+
+| Requisito do cenário | Resultado |
+|---|---|
+| Pelo menos 10 estados | atendido: 12 estados |
+| Pelo menos 14 conexões | atendido: 16 arestas direcionadas |
+| Pelo menos 3 caminhos | atendido: 3 rotas completas |
+| Estado sem saída | atendido: Aeroporto |
+| Caminho enganoso | atendido: Centro → Shopping → Terminal |
+| Heurística nula no objetivo | atendido: Hospital = 0 |
+| Visualização do processo | atendido: grafo, animação e log |
+| Comparação de heurísticas | atendido: modo de comparação da interface |
+
+## 10. Tecnologias e execução
+
+O projeto utiliza HTML5, CSS3 e JavaScript ES6+, sem um servidor de aplicação ou etapa de compilação. Cytoscape.js é responsável pela visualização do grafo e Lucide fornece os ícones da interface. As bibliotecas são carregadas por CDN.
+
+Para executar, basta abrir `index.html` ou iniciar um servidor estático no diretório do projeto:
+
+```bash
+python -m http.server 8080
 ```
 
-### 5.3 Características Importantes
+Em seguida, a aplicação fica disponível em `http://localhost:8080`.
 
-1. **Decisões dinâmicas:** O algoritmo NÃO segue rota fixa. As decisões são tomadas durante a execução.
-2. **Estados disponíveis globais:** A seleção considera TODOS os estados abertos, não apenas os vizinhos do último expandido.
-3. **Controle de ciclos:** Estados visitados não são revisitados.
-4. **Reconstrução do caminho:** Via mapa de predecessores (backtracking).
+## 11. Limitações e melhorias futuras
 
----
+O grafo é fixo e os valores heurísticos são definidos manualmente. A aplicação também não atribui pesos às arestas, portanto mede o caminho em quantidade de conexões e não em tempo, distância ou custo real.
 
-## 6. Primeira Execução — Heurística Original
+Como extensões, seria possível permitir a criação de estados pela interface, editar valores de $h(n)$ em tempo real, adicionar pesos às arestas e comparar a busca gulosa com o algoritmo A*. Também seria interessante incluir testes automatizados para validar a contagem de caminhos, o critério de desempate e os resultados esperados de cada heurística.
 
-### 6.1 Execução Passo a Passo
+## 12. Conclusão
 
-**Passo 1:**
-- Estado expandido: **Base** (h=18)
-- Novos estados: Centro (h=13), Rodoviária (h=15), Parque (h=10)
-- Disponíveis: Parque h=10, Centro h=13, Rodoviária h=15
-- Próximo escolhido: **Parque** (menor h)
+O projeto alcançou o objetivo de tornar visível o funcionamento de uma busca heurística em um grafo direcionado. A execução original encontrou uma rota menor porque seus valores orientaram a busca pelo eixo mais favorável. Ao modificar três estimativas, o experimento produziu uma rota mais longa e exigiu mais expansões.
 
-**Passo 2:**
-- Estado expandido: **Parque** (h=10)
-- Novos estados: Universidade (h=7), Estádio (h=12)
-- Disponíveis: Universidade h=7, Estádio h=12, Centro h=13, Rodoviária h=15
-- Próximo escolhido: **Universidade** (menor h)
-
-**Passo 3:**
-- Estado expandido: **Universidade** (h=7)
-- Novos estados: Ponte (h=4)
-- Disponíveis: Ponte h=4, Estádio h=12, Centro h=13, Rodoviária h=15
-- Próximo escolhido: **Ponte** (menor h)
-
-**Passo 4:**
-- Estado expandido: **Ponte** (h=4)
-- Novos estados: Hospital (h=0)
-- Disponíveis: Hospital h=0, Estádio h=12, Centro h=13, Rodoviária h=15
-- Próximo escolhido: **Hospital** (menor h)
-
-**Passo 5:**
-- 🎯 **Objetivo encontrado: Hospital**
-
-### 6.2 Resultados
-
-| Critério | Valor |
-|----------|-------|
-| Origem | Base |
-| Destino | Hospital |
-| Caminho encontrado | Base → Parque → Universidade → Ponte → Hospital |
-| Ordem de visita | Base → Parque → Universidade → Ponte → Hospital |
-| Ordem de expansão | Base → Parque → Universidade → Ponte |
-| Qtd. estados visitados | 5 |
-| Qtd. estados expandidos | 4 |
-
----
-
-## 7. Segunda Execução — Heurística Modificada
-
-### 7.1 Modificações Realizadas
-
-| Estado | h(n) Original | h(n) Modificada | Motivo |
-|--------|--------------|-----------------|--------|
-| Centro | 13 | **4** | Tornar Centro muito atrativo, direcionando a busca para lá |
-| Parque | 10 | **16** | Afastar a busca do caminho direto |
-| Shopping | 9 | **3** | Reforçar o caminho enganoso via Shopping |
-
-### 7.2 Execução Passo a Passo
-
-**Passo 1:**
-- Estado expandido: **Base** (h=18)
-- Novos estados: Centro (h=4), Rodoviária (h=15), Parque (h=16)
-- Disponíveis: Centro h=4, Rodoviária h=15, Parque h=16
-- Próximo escolhido: **Centro** (menor h)
-
-**Passo 2:**
-- Estado expandido: **Centro** (h=4)
-- Novos estados: Aeroporto (h=14), Shopping (h=3)
-- Disponíveis: Shopping h=3, Aeroporto h=14, Rodoviária h=15, Parque h=16
-- Próximo escolhido: **Shopping** (menor h)
-
-**Passo 3:**
-- Estado expandido: **Shopping** (h=3)
-- Novos estados: Terminal (h=11)
-- Disponíveis: Terminal h=11, Aeroporto h=14, Rodoviária h=15, Parque h=16
-- Próximo escolhido: **Terminal** (menor h)
-
-**Passo 4:**
-- Estado expandido: **Terminal** (h=11)
-- Novos estados: Praça (h=6)
-- Disponíveis: Praça h=6, Aeroporto h=14, Rodoviária h=15, Parque h=16
-- Próximo escolhido: **Praça** (menor h)
-
-**Passo 5:**
-- Estado expandido: **Praça** (h=6)
-- Novos estados: Ponte (h=4)
-- Disponíveis: Ponte h=4, Aeroporto h=14, Rodoviária h=15, Parque h=16
-- Próximo escolhido: **Ponte** (menor h)
-
-**Passo 6:**
-- Estado expandido: **Ponte** (h=4)
-- Novos estados: Hospital (h=0)
-- Disponíveis: Hospital h=0, Aeroporto h=14, Rodoviária h=15, Parque h=16
-- Próximo escolhido: **Hospital** (menor h)
-
-**Passo 7:**
-- 🎯 **Objetivo encontrado: Hospital**
-
-### 7.3 Resultados
-
-| Critério | Valor |
-|----------|-------|
-| Origem | Base |
-| Destino | Hospital |
-| Caminho encontrado | Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital |
-| Ordem de visita | Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital |
-| Ordem de expansão | Base → Centro → Shopping → Terminal → Praça → Ponte |
-| Qtd. estados visitados | 7 |
-| Qtd. estados expandidos | 6 |
-
----
-
-## 8. Comparação dos Resultados
-
-### 8.1 Tabela Comparativa
-
-| Critério | Heurística Original | Heurística Modificada |
-|----------|--------------------|-----------------------|
-| Caminho encontrado | Base → Parque → Universidade → Ponte → Hospital | Base → Centro → Shopping → Terminal → Praça → Ponte → Hospital |
-| Qtd. estados visitados | 5 | 7 |
-| Qtd. estados expandidos | 4 | 6 |
-| Ordem de visita | Base, Parque, Universidade, Ponte, Hospital | Base, Centro, Shopping, Terminal, Praça, Ponte, Hospital |
-
-### 8.2 Análise
-
-**A ordem de visita mudou?**
-Sim. A heurística original levou a busca por Base→Parque→Universidade→Ponte→Hospital, enquanto a modificada direcionou para Base→Centro→Shopping→Terminal→Praça→Ponte→Hospital. A sequência de exploração mudou completamente.
-
-**O caminho encontrado mudou?**
-Sim. O caminho original tem 5 estados (4 arestas), enquanto o modificado tem 7 estados (6 arestas). A heurística modificada encontrou um caminho mais longo.
-
-**A quantidade de estados visitados/expandidos mudou?**
-Sim. A heurística original visitou 5 estados e expandiu 4, enquanto a modificada visitou 7 e expandiu 6. A heurística modificada foi menos eficiente.
-
-**A heurística modificada direcionou a busca para uma região diferente?**
-Sim. Ao reduzir o h(n) do Centro (13→4) e do Shopping (9→3), e aumentar o h(n) do Parque (10→16), a busca foi atraída para a região leste do grafo (Centro→Shopping→Terminal), que é justamente o caminho enganoso. A busca evitou o Parque, que na heurística original era o caminho mais direto.
-
-**Qual heurística apresentou melhor comportamento?**
-A **heurística original** apresentou melhor comportamento. Ela encontrou o caminho mais curto (5 estados vs 7) com menos estados visitados (5 vs 7) e expandidos (4 vs 6). Isso ocorre porque os valores originais são mais fiéis à distância real dos estados ao Hospital, orientando a busca de forma mais eficiente. A heurística modificada, por ter valores distorcidos, induziu o algoritmo a explorar o caminho enganoso antes de encontrar o objetivo.
-
----
-
-## 9. Tecnologias Utilizadas
-
-- **HTML5** — Estrutura semântica da página
-- **CSS3** — Design system com dark theme, glassmorphism e animações
-- **JavaScript (ES6+)** — Implementação do algoritmo e interface
-- **Cytoscape.js** — Biblioteca para visualização interativa de grafos
-- **Google Fonts (Inter)** — Tipografia
-
----
-
-## 10. Repositório
-
-Link do repositório: https://github.com/fe4ugusto/AT2-IA
-
----
-
-## 11. Conclusão
-
-O projeto demonstrou com sucesso como a função heurística h(n) influencia diretamente o comportamento da Busca Heurística. A visualização interativa permite acompanhar cada decisão do algoritmo, evidenciando os estados candidatos, os valores heurísticos analisados e as escolhas realizadas.
-
-A comparação entre as duas heurísticas confirmou que valores mais precisos (mais próximos da distância real) conduzem a buscas mais eficientes, enquanto valores distorcidos podem levar o algoritmo a explorar regiões desnecessárias do grafo, aumentando o custo da busca mesmo que o objetivo seja eventualmente encontrado.
+Mais do que exibir uma rota, a aplicação mostra por que ela foi escolhida. Essa característica torna o projeto útil para estudar a relação entre representação do problema, função heurística, ordem de exploração e qualidade da solução.
