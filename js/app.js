@@ -28,6 +28,7 @@ let resultadoModificado = null;
 document.addEventListener('DOMContentLoaded', () => {
   // Inicializar grafo com heurística original
   initGraph('original');
+  updateDashboardSummary();
   
   // Event listeners dos botões
   document.getElementById('btn-auto').addEventListener('click', runAutomatic);
@@ -50,6 +51,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mostrar tabela de heurísticas
   renderHeuristicTable();
 });
+
+function updateDashboardSummary(resultados = null) {
+  const label = currentHeuristic === 'original' ? 'Original' : 'Modificada';
+  const heuristicText = document.getElementById('summary-heuristic');
+  const heuristicSub = document.getElementById('summary-heuristic-subtitle');
+  const statusHeuristic = document.getElementById('status-heuristic');
+  const pathText = document.getElementById('summary-path');
+  const visitedText = document.getElementById('summary-visited');
+  const statusText = document.getElementById('summary-status');
+  const statusDetail = document.getElementById('summary-status-detail');
+
+  if (heuristicText) heuristicText.textContent = label;
+  if (statusHeuristic) statusHeuristic.textContent = label;
+  if (heuristicSub) {
+    heuristicSub.textContent = currentHeuristic === 'original' ? 'Busca padrão' : 'Teste de engano';
+  }
+
+  if (resultados && resultados.encontrou) {
+    pathText.textContent = resultados.caminho.length ? `${resultados.caminho.length} etapas` : 'Encontrado';
+    visitedText.textContent = String(resultados.quantidadeVisitados || 0);
+    statusText.textContent = 'Rota OK';
+    statusDetail.textContent = `${resultados.caminho.join(' → ')}`;
+  } else if (resultados && !resultados.encontrou) {
+    pathText.textContent = 'Sem rota';
+    visitedText.textContent = String(resultados.quantidadeVisitados || 0);
+    statusText.textContent = 'Falhou';
+    statusDetail.textContent = 'Não há caminho válido';
+  } else {
+    pathText.textContent = '—';
+    visitedText.textContent = '0';
+    statusText.textContent = 'Pronto';
+    statusDetail.textContent = 'Aguardando nova execução';
+  }
+}
 
 /**
  * Inicializa o grafo com a heurística selecionada.
@@ -90,23 +125,32 @@ function renderHeuristicTable() {
     tr.innerHTML = `
       <td>${getEstadoIcon(estado)} ${estado}</td>
       <td>${hOrig}</td>
-      <td class="${changed ? 'changed' : ''}">${hMod}${changed ? ' ⚠' : ''}</td>
+      <td class="${changed ? 'changed' : ''}">${hMod}${changed ? ' <i data-lucide="alert-triangle"></i>' : ''}</td>
     `;
     tbody.appendChild(tr);
   }
+  lucide.createIcons();
 }
 
 /**
- * Retorna um emoji representando o tipo de estado.
+ * Retorna um ícone SVG (Lucide) representando o tipo de estado.
  */
 function getEstadoIcon(estado) {
   const icons = {
-    'Base': '🚑', 'Centro': '🏙️', 'Rodoviária': '🚌',
-    'Parque': '🌳', 'Aeroporto': '✈️', 'Shopping': '🛍️',
-    'Terminal': '🚉', 'Universidade': '🎓', 'Estádio': '⚽',
-    'Praça': '⛲', 'Ponte': '🌉', 'Hospital': '🏥',
+    'Base': '<i data-lucide="ambulance"></i>', 
+    'Centro': '<i data-lucide="building-2"></i>', 
+    'Rodoviária': '<i data-lucide="bus"></i>',
+    'Parque': '<i data-lucide="tree-pine"></i>', 
+    'Aeroporto': '<i data-lucide="plane"></i>', 
+    'Shopping': '<i data-lucide="shopping-bag"></i>',
+    'Terminal': '<i data-lucide="train-front"></i>', 
+    'Universidade': '<i data-lucide="graduation-cap"></i>', 
+    'Estádio': '<i data-lucide="ticket"></i>',
+    'Praça': '<i data-lucide="flower-2"></i>', 
+    'Ponte': '<i data-lucide="cable"></i>', 
+    'Hospital': '<i data-lucide="hospital"></i>',
   };
-  return icons[estado] || '📍';
+  return icons[estado] || '<i data-lucide="map-pin"></i>';
 }
 
 // ──────────────────────────────────────────────
@@ -126,9 +170,9 @@ async function runAutomatic() {
   currentSearch = new HeuristicSearch(heuristics, ESTADO_INICIAL, ESTADO_OBJETIVO);
   
   clearLog();
-  addLogEntry('info', `🚀 Iniciando Busca Heurística (${currentHeuristic === 'original' ? 'Original' : 'Modificada'})`);
-  addLogEntry('info', `📍 Origem: ${ESTADO_INICIAL} | 🎯 Destino: ${ESTADO_OBJETIVO}`);
-  addLogEntry('info', `📐 Critério de desempate: Ordem Alfabética`);
+  addLogEntry('info', `<div class="log-entry-header"><i data-lucide="rocket"></i> Iniciando Busca Heurística (${currentHeuristic === 'original' ? 'Original' : 'Modificada'})</div>`);
+  addLogEntry('info', `<div class="log-entry-header"><i data-lucide="map-pin"></i> Origem: ${ESTADO_INICIAL} | <i data-lucide="target"></i> Destino: ${ESTADO_OBJETIVO}</div>`);
+  addLogEntry('info', `<div class="log-entry-header"><i data-lucide="ruler"></i> Critério de desempate: Ordem Alfabética</div>`);
   addLogDivider();
 
   let stepCount = 0;
@@ -150,11 +194,12 @@ async function runAutomatic() {
   // Resultados finais
   const resultados = currentSearch.getResultados();
   displayResults(resultados);
+  updateDashboardSummary(resultados);
 
   // Animar caminho final
   if (resultados.encontrou) {
     addLogDivider();
-    addLogEntry('success', `🏁 Caminho encontrado!`);
+    addLogEntry('success', `<div class="log-entry-header"><i data-lucide="flag"></i> Caminho encontrado!</div>`);
     await sleep(400);
     await animatePath(resultados.caminho, 300);
   }
@@ -185,14 +230,14 @@ async function runStep() {
     currentSearch = new HeuristicSearch(heuristics, ESTADO_INICIAL, ESTADO_OBJETIVO);
     stepCounter = 0;
     clearLog();
-    addLogEntry('info', `🚀 Busca Passo a Passo (${currentHeuristic === 'original' ? 'Original' : 'Modificada'})`);
-    addLogEntry('info', `📍 Origem: ${ESTADO_INICIAL} | 🎯 Destino: ${ESTADO_OBJETIVO}`);
-    addLogEntry('info', `📐 Critério de desempate: Ordem Alfabética`);
+    addLogEntry('info', `<div class="log-entry-header"><i data-lucide="step-forward"></i> Busca Passo a Passo (${currentHeuristic === 'original' ? 'Original' : 'Modificada'})</div>`);
+    addLogEntry('info', `<div class="log-entry-header"><i data-lucide="map-pin"></i> Origem: ${ESTADO_INICIAL} | <i data-lucide="target"></i> Destino: ${ESTADO_OBJETIVO}</div>`);
+    addLogEntry('info', `<div class="log-entry-header"><i data-lucide="ruler"></i> Critério de desempate: Ordem Alfabética</div>`);
     addLogDivider();
   }
 
   if (currentSearch.finalizado) {
-    addLogEntry('warning', '⚠️ Busca já finalizada. Clique em Reset para reiniciar.');
+    addLogEntry('warning', '<div class="log-entry-header"><i data-lucide="alert-circle"></i> Busca já finalizada. Clique em Reset para reiniciar.</div>');
     return;
   }
 
@@ -207,8 +252,9 @@ async function runStep() {
     if (currentSearch.finalizado && currentSearch.encontrou) {
       const resultados = currentSearch.getResultados();
       displayResults(resultados);
+      updateDashboardSummary(resultados);
       addLogDivider();
-      addLogEntry('success', `🏁 Caminho encontrado!`);
+      addLogEntry('success', `<div class="log-entry-header"><i data-lucide="flag"></i> Caminho encontrado!</div>`);
       await sleep(400);
       await animatePath(resultados.caminho, 300);
 
@@ -238,9 +284,10 @@ function resetAll() {
   // Limpar log e resultados
   clearLog();
   clearResults();
+  updateDashboardSummary();
   setButtonsEnabled(true, false);
 
-  addLogEntry('info', '🔄 Sistema resetado. Pronto para nova execução.');
+  addLogEntry('info', '<div class="log-entry-header"><i data-lucide="refresh-cw"></i> Sistema resetado. Pronto para nova execução.</div>');
 }
 
 // ──────────────────────────────────────────────
@@ -253,11 +300,11 @@ async function runComparison() {
   setButtonsEnabled(false, false);
 
   clearLog();
-  addLogEntry('info', '🔬 Modo Comparação: Executando ambas heurísticas...');
+  addLogEntry('info', '<div class="log-entry-header"><i data-lucide="microscope"></i> Modo Comparação: Executando ambas heurísticas...</div>');
   addLogDivider();
 
   // ── Execução 1: Heurística Original ──
-  addLogEntry('info', '━━━ EXECUÇÃO 1: Heurística Original ━━━');
+  addLogEntry('info', '<div class="log-entry-header"><i data-lucide="folder-git-2"></i> EXECUÇÃO 1: Heurística Original</div>');
   
   initGraph('original');
   const search1 = new HeuristicSearch(HEURISTICS_ORIGINAL, ESTADO_INICIAL, ESTADO_OBJETIVO);
@@ -282,7 +329,7 @@ async function runComparison() {
   await sleep(1000);
 
   // ── Execução 2: Heurística Modificada ──
-  addLogEntry('info', '━━━ EXECUÇÃO 2: Heurística Modificada ━━━');
+  addLogEntry('info', '<div class="log-entry-header"><i data-lucide="folder-search-2"></i> EXECUÇÃO 2: Heurística Modificada</div>');
   
   initGraph('modified');
   const search2 = new HeuristicSearch(HEURISTICS_MODIFIED, ESTADO_INICIAL, ESTADO_OBJETIVO);
@@ -306,6 +353,8 @@ async function runComparison() {
   // ── Exibir tabela comparativa ──
   addLogDivider();
   displayComparison(resultadoOriginal, resultadoModificado);
+  const comparisonSummary = resultadoModificado || resultadoOriginal;
+  if (comparisonSummary) updateDashboardSummary(comparisonSummary);
 
   isRunning = false;
   setButtonsEnabled(true, false);
@@ -329,6 +378,7 @@ function addLogEntry(type, message) {
   entry.innerHTML = message;
   log.appendChild(entry);
   log.scrollTop = log.scrollHeight;
+  lucide.createIcons();
 }
 
 function addLogDivider() {
@@ -340,33 +390,33 @@ function addLogDivider() {
  */
 function logStep(number, passo) {
   if (passo.tipo === 'falha') {
-    addLogEntry('error', `❌ ${passo.mensagem}`);
+    addLogEntry('error', `<div class="log-entry-header"><i data-lucide="x-circle"></i> ${passo.mensagem}</div>`);
     return;
   }
 
   if (passo.tipo === 'sucesso') {
     addLogEntry('success', `
       <div class="step-header">Passo ${number}</div>
-      <div class="step-detail">🎯 ${passo.mensagem}</div>
-      <div class="step-detail">📍 Caminho: <strong>${passo.caminho.join(' → ')}</strong></div>
+      <div class="step-detail"><i data-lucide="check-circle"></i> ${passo.mensagem}</div>
+      <div class="step-detail"><i data-lucide="route"></i> Caminho: <strong>${passo.caminho.join(' → ')}</strong></div>
     `);
     return;
   }
 
   // Passo de expansão
   const novosStr = passo.novosEstados.length > 0
-    ? passo.novosEstados.map(n => `<span class="tag tag-new">${n.estado} h=${n.h}</span>`).join(' ')
+    ? passo.novosEstados.map(n => `<span class="tag tag-new"><i data-lucide="plus"></i> ${n.estado} h=${n.h}</span>`).join(' ')
     : '<span class="tag tag-none">nenhum</span>';
 
   const abertosStr = passo.abertosAtuais.length > 0
     ? passo.abertosAtuais.map((a, i) => {
         const isNext = i === 0;
-        return `<span class="tag ${isNext ? 'tag-next' : 'tag-open'}">${a.estado} h=${a.h}${isNext ? ' ★' : ''}</span>`;
+        return `<span class="tag ${isNext ? 'tag-next' : 'tag-open'}"><i data-lucide="${isNext ? 'star' : 'clock'}"></i> ${a.estado} h=${a.h}</span>`;
       }).join(' ')
     : '<span class="tag tag-none">nenhum</span>';
 
   const proximoStr = passo.proximoEscolhido
-    ? `<strong class="next-chosen">${passo.proximoEscolhido}</strong>`
+    ? `<strong class="next-chosen"><i data-lucide="arrow-right-circle"></i> ${passo.proximoEscolhido}</strong>`
     : '<em>—</em>';
 
   addLogEntry('step', `
@@ -393,7 +443,8 @@ function logStep(number, passo) {
 
 function clearResults() {
   const container = document.getElementById('results-content');
-  if (container) container.innerHTML = '<p class="placeholder">Execute a busca para ver os resultados.</p>';
+  if (container) container.innerHTML = '<p class="placeholder"><i data-lucide="ghost"></i> Execute a busca para ver os resultados.</p>';
+  lucide.createIcons();
 }
 
 function displayResults(resultados) {
@@ -401,7 +452,7 @@ function displayResults(resultados) {
   if (!container) return;
 
   const caminhoStr = resultados.encontrou
-    ? resultados.caminho.map(e => `<span class="path-node">${getEstadoIcon(e)} ${e}</span>`).join('<span class="path-arrow">→</span>')
+    ? resultados.caminho.map(e => `<span class="path-node">${getEstadoIcon(e)} ${e}</span>`).join('<span class="path-arrow"><i data-lucide="arrow-right"></i></span>')
     : '<span class="error">Caminho não encontrado</span>';
 
   container.innerHTML = `
@@ -428,14 +479,15 @@ function displayResults(resultados) {
       </div>
       <div class="result-card full-width">
         <div class="result-label">Ordem de Visita</div>
-        <div class="result-path">${resultados.ordemVisita.map(e => `<span class="visit-node">${e}</span>`).join('<span class="path-arrow">→</span>')}</div>
+        <div class="result-path">${resultados.ordemVisita.map(e => `<span class="visit-node">${e}</span>`).join('<span class="path-arrow"><i data-lucide="arrow-right"></i></span>')}</div>
       </div>
       <div class="result-card full-width">
         <div class="result-label">Ordem de Expansão</div>
-        <div class="result-path">${resultados.ordemExpansao.map(e => `<span class="expand-node">${e}</span>`).join('<span class="path-arrow">→</span>')}</div>
+        <div class="result-path">${resultados.ordemExpansao.map(e => `<span class="expand-node">${e}</span>`).join('<span class="path-arrow"><i data-lucide="arrow-right"></i></span>')}</div>
       </div>
     </div>
   `;
+  lucide.createIcons();
 }
 
 // ──────────────────────────────────────────────
@@ -444,7 +496,7 @@ function displayResults(resultados) {
 
 function displayComparison(res1, res2) {
   if (!res1 || !res2) {
-    addLogEntry('warning', '⚠️ Execute ambas as heurísticas antes de comparar.');
+    addLogEntry('warning', '<div class="log-entry-header"><i data-lucide="alert-triangle"></i> Execute ambas as heurísticas antes de comparar.</div>');
     return;
   }
 
@@ -476,48 +528,50 @@ function displayComparison(res1, res2) {
           <td>Caminho encontrado</td>
           <td>${caminho1}</td>
           <td>${caminho2}</td>
-          <td>${caminhoMudou ? '<span class="badge badge-yes">Sim</span>' : '<span class="badge badge-no">Não</span>'}</td>
+          <td>${caminhoMudou ? '<span class="badge badge-yes"><i data-lucide="check"></i> Sim</span>' : '<span class="badge badge-no"><i data-lucide="minus"></i> Não</span>'}</td>
         </tr>
         <tr>
           <td>Ordem de visita</td>
           <td>${visita1}</td>
           <td>${visita2}</td>
-          <td>${visitaMudou ? '<span class="badge badge-yes">Sim</span>' : '<span class="badge badge-no">Não</span>'}</td>
+          <td>${visitaMudou ? '<span class="badge badge-yes"><i data-lucide="check"></i> Sim</span>' : '<span class="badge badge-no"><i data-lucide="minus"></i> Não</span>'}</td>
         </tr>
         <tr>
           <td>Qtd. estados visitados</td>
           <td>${res1.quantidadeVisitados}</td>
           <td>${res2.quantidadeVisitados}</td>
-          <td>${qtdVisitMudou ? '<span class="badge badge-yes">Sim</span>' : '<span class="badge badge-no">Não</span>'}</td>
+          <td>${qtdVisitMudou ? '<span class="badge badge-yes"><i data-lucide="check"></i> Sim</span>' : '<span class="badge badge-no"><i data-lucide="minus"></i> Não</span>'}</td>
         </tr>
         <tr>
           <td>Qtd. estados expandidos</td>
           <td>${res1.quantidadeExpandidos}</td>
           <td>${res2.quantidadeExpandidos}</td>
-          <td>${qtdExpMudou ? '<span class="badge badge-yes">Sim</span>' : '<span class="badge badge-no">Não</span>'}</td>
+          <td>${qtdExpMudou ? '<span class="badge badge-yes"><i data-lucide="check"></i> Sim</span>' : '<span class="badge badge-no"><i data-lucide="minus"></i> Não</span>'}</td>
         </tr>
       </tbody>
     </table>
 
     <div class="analysis-box">
-      <h4>📊 Análise Comparativa</h4>
+      <h4><i data-lucide="bar-chart-2"></i> Análise Comparativa</h4>
       <ul>
-        <li><strong>Ordem de visita:</strong> ${visitaMudou 
+        <li><i data-lucide="info"></i> <strong>Ordem de visita:</strong> ${visitaMudou 
           ? 'A ordem mudou significativamente, indicando que a heurística modificada direcionou a busca para uma região diferente do grafo.' 
           : 'A ordem permaneceu igual, indicando que as alterações não foram suficientes para mudar o comportamento.'}</li>
-        <li><strong>Caminho encontrado:</strong> ${caminhoMudou 
+        <li><i data-lucide="info"></i> <strong>Caminho encontrado:</strong> ${caminhoMudou 
           ? 'O caminho final mudou, demonstrando que a heurística pode conduzir a soluções diferentes mesmo com o mesmo grafo.' 
           : 'O caminho final permaneceu o mesmo, embora a ordem de exploração possa ter variado.'}</li>
-        <li><strong>Eficiência:</strong> ${qtdVisitMudou || qtdExpMudou
+        <li><i data-lucide="info"></i> <strong>Eficiência:</strong> ${qtdVisitMudou || qtdExpMudou
           ? `A heurística ${res1.quantidadeVisitados <= res2.quantidadeVisitados ? 'original' : 'modificada'} foi mais eficiente, visitando ${Math.min(res1.quantidadeVisitados, res2.quantidadeVisitados)} estados contra ${Math.max(res1.quantidadeVisitados, res2.quantidadeVisitados)}.`
           : 'Ambas tiveram a mesma eficiência em termos de estados visitados.'}</li>
-        <li><strong>Direcionamento:</strong> ${visitaMudou 
+        <li><i data-lucide="info"></i> <strong>Direcionamento:</strong> ${visitaMudou 
           ? 'A heurística modificada, ao reduzir o h(n) do Centro e Shopping (tornando-os mais atrativos) e aumentar o h(n) do Parque, direcionou a busca para o caminho enganoso antes de encontrar a rota correta.'
           : 'As modificações não alteraram significativamente o direcionamento da busca.'}</li>
       </ul>
     </div>
   `;
 
+  lucide.createIcons();
+  
   // Scroll para a seção de comparação
   document.getElementById('comparison-section').scrollIntoView({ behavior: 'smooth' });
 }

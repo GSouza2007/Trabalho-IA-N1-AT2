@@ -70,20 +70,17 @@ function initCytoscape(containerId, heuristics) {
           'text-wrap': 'wrap',
           'text-valign': 'center',
           'text-halign': 'center',
-          'font-family': '"Inter", sans-serif',
-          'font-size': '11px',
-          'font-weight': '600',
-          'color': '#e2e8f0',
-          'text-outline-color': 'rgba(0,0,0,0.6)',
-          'text-outline-width': '2px',
-          'width': '70px',
-          'height': '70px',
-          'background-color': '#334155',
-          'border-width': '2px',
-          'border-color': '#64748b',
+          'font-family': '"Outfit", sans-serif',
+          'font-size': '12px',
+          'font-weight': '700',
+          'color': '#0f172a',
+          'width': '75px',
+          'height': '75px',
+          'background-color': '#ffffff',
+          'border-width': '0px',
           'shape': 'round-rectangle',
-          'corner-radius': '12px',
-          'transition-property': 'background-color, border-color, border-width, width, height',
+          'corner-radius': '20px',
+          'transition-property': 'background-color, width, height, border-width, border-color',
           'transition-duration': '0.3s',
         },
       },
@@ -92,10 +89,10 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node[?isInicio]',
         style: {
-          'background-color': '#1e40af',
-          'border-color': '#60a5fa',
+          'background-color': '#bfdbfe',
           'border-width': '3px',
-          'color': '#bfdbfe',
+          'border-color': '#3b82f6',
+          'color': '#1e3a8a',
         },
       },
 
@@ -103,11 +100,10 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node[?isObjetivo]',
         style: {
-          'background-color': '#065f46',
-          'border-color': '#34d399',
+          'background-color': '#d1fae5',
           'border-width': '3px',
-          'color': '#a7f3d0',
-          'shape': 'round-rectangle',
+          'border-color': '#10b981',
+          'color': '#064e3b',
         },
       },
 
@@ -115,10 +111,10 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node[?isBeco]',
         style: {
-          'background-color': '#7f1d1d',
-          'border-color': '#f87171',
-          'border-width': '2px',
-          'color': '#fca5a5',
+          'background-color': '#fee2e2',
+          'border-width': '3px',
+          'border-color': '#ef4444',
+          'color': '#7f1d1d',
         },
       },
 
@@ -126,11 +122,11 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node.expanding',
         style: {
-          'background-color': '#7c3aed',
-          'border-color': '#a78bfa',
+          'background-color': '#e9d5ff',
           'border-width': '4px',
-          'width': '82px',
-          'height': '82px',
+          'border-color': '#a855f7',
+          'width': '85px',
+          'height': '85px',
         },
       },
 
@@ -138,10 +134,10 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node.visited',
         style: {
-          'background-color': '#475569',
-          'border-color': '#94a3b8',
+          'background-color': '#f1f5f9',
+          'color': '#94a3b8',
           'border-width': '2px',
-          'opacity': 0.7,
+          'border-color': '#cbd5e1',
         },
       },
 
@@ -149,10 +145,10 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node.open',
         style: {
-          'background-color': '#92400e',
-          'border-color': '#fbbf24',
+          'background-color': '#fef3c7',
           'border-width': '3px',
-          'color': '#fef3c7',
+          'border-color': '#f59e0b',
+          'color': '#92400e',
         },
       },
 
@@ -160,11 +156,11 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node.discovered',
         style: {
-          'background-color': '#059669',
-          'border-color': '#6ee7b7',
-          'border-width': '4px',
-          'width': '78px',
-          'height': '78px',
+          'background-color': '#bae6fd',
+          'border-width': '3px',
+          'border-color': '#0ea5e9',
+          'width': '80px',
+          'height': '80px',
         },
       },
 
@@ -172,13 +168,12 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'node.path',
         style: {
-          'background-color': '#059669',
-          'border-color': '#34d399',
+          'background-color': '#fbcfe8',
           'border-width': '4px',
-          'color': '#ecfdf5',
-          'width': '80px',
-          'height': '80px',
-          'opacity': 1,
+          'border-color': '#ec4899',
+          'color': '#831843',
+          'width': '85px',
+          'height': '85px',
         },
       },
 
@@ -186,9 +181,9 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'edge',
         style: {
-          'width': 2,
-          'line-color': '#475569',
-          'target-arrow-color': '#475569',
+          'width': 3,
+          'line-color': '#cbd5e1',
+          'target-arrow-color': '#cbd5e1',
           'target-arrow-shape': 'triangle',
           'curve-style': 'bezier',
           'arrow-scale': 1.2,
@@ -201,9 +196,9 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'edge.exploring',
         style: {
-          'width': 3,
-          'line-color': '#a78bfa',
-          'target-arrow-color': '#a78bfa',
+          'width': 5,
+          'line-color': '#c084fc',
+          'target-arrow-color': '#c084fc',
         },
       },
 
@@ -211,10 +206,10 @@ function initCytoscape(containerId, heuristics) {
       {
         selector: 'edge.path',
         style: {
-          'width': 4,
-          'line-color': '#34d399',
-          'target-arrow-color': '#34d399',
-          'arrow-scale': 1.5,
+          'width': 6,
+          'line-color': '#ec4899',
+          'target-arrow-color': '#ec4899',
+          'arrow-scale': 1.6,
         },
       },
     ],
